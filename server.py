@@ -24,8 +24,9 @@ while True: # Maybe change so that when the main program stops, the server stops
         gaze_vec = vector_algorithm.estimate_gaze(image, faces_matrix)
         looking = calculation.is_looking_at_camera(gaze_vec)
         
-		# Send the result back to the client
+		# Send the result back to the client and reset the signal
         client_socket.send(looking.encode())
+        signal = None
 
 print("Server stopped.")
 s.close()
