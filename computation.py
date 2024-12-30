@@ -4,6 +4,6 @@ def is_looking_at_camera(gaze_vec: list) -> bool:
 	"""
 	if gaze_vec == [1, 1, 1]:
 		print("Received vector")
-		return True
+		return "True"
 	else:
-		return False
+		return "False"

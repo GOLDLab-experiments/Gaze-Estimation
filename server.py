@@ -22,7 +22,9 @@ while True: # Maybe change so that when the main program stops, the server stops
         
 		# Run the routine
         image, faces_matrix = camera.snap_photo()
-        cv2.imshow("Image", image)
+
+        # cv2.imshow("Image", image)
+        
         gaze_vec = vector_algorithm.estimate_gaze(image, faces_matrix)
         looking = computation.is_looking_at_camera(gaze_vec)
         
