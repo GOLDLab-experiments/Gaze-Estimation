@@ -1,8 +1,9 @@
 import camera
 import vector_algorithm
-import calculation
+import computation
 
 import socket
+import cv2
 
 server_addr = 'localhost'
 server_port = 12345
@@ -14,15 +15,16 @@ print(f"Server is listening on adress {server_addr} and port {server_port}.")
 client_socket, client_info = s.accept()
 
 while True: # Maybe change so that when the main program stops, the server stops too
-    signal = client_socket.read(1).decode()
+    signal = client_socket.recv(1024).decode()
     if signal:
         # For debugging, print a messege
         print("Received signal")
         
 		# Run the routine
         image, faces_matrix = camera.snap_photo()
+        cv2.imshow("Image", image)
         gaze_vec = vector_algorithm.estimate_gaze(image, faces_matrix)
-        looking = calculation.is_looking_at_camera(gaze_vec)
+        looking = computation.is_looking_at_camera(gaze_vec)
         
 		# Send the result back to the client and reset the signal
         client_socket.send(looking.encode())

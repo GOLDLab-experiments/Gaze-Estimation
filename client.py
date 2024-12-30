@@ -22,5 +22,5 @@ class client:
 
 		# Receive the result from the server - a boolean value.
 		result = self.sock.recv(1024).decode()
-		result = result.asType(bool)
+		result = eval(result)
 		return result
