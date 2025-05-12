@@ -1,0 +1,9 @@
+cd /home/dlr/yolov11
+
+# Inference by yolo11 usig ultralitics CLI
+
+yolo task=detect mode=predict model="itay.pt" conf=0.25 source={dataset.location}/test/images save=True
+
+yolo task=detect mode=predict model= "trained_models/itay.pt" conf=0.25 source=/home/dlr/yolov5/helmet/images/train/helm_000000.jpg save=True
+
+yolo task=detect mode=predict model= "trained_models/yolo11n-100epocs.pt" conf=0.25 source=/home/dlr/yolov5/helmet/images/train/helm_000000.jpg save=True
