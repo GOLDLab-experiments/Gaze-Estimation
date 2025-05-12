@@ -1,6 +1,0 @@
-Omri's client --request--> helmet detector --request--> gaze detector
-
-Omri's client <--gaze and helmet result-- helmet detector <--gaze result-- gaze detector
-
-Omri's client: client over the network
-Helmet & Gaze detectors: on the same computer
