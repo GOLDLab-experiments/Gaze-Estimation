@@ -9,6 +9,10 @@ login(get_token())  # Log in to HuggingFace Hub using a private token
 # This model is a fine-tuned version of the PaliGemma model for image captioning tasks.
 PALIGEMMA = 'google/paligemma-3b-ft-textcaps-448'
 
+# LLM model for classification
+LLAMA = "meta-llama/Llama-3.2-1B-Instruct"
+# Or for a smaller, faster option: llm_model_id = "facebook/opt-125m"
+
 # Load the processor and model for image captioning
 processor = AutoProcessor.from_pretrained(PALIGEMMA)
 paligemma = PaliGemmaForConditionalGeneration.from_pretrained(PALIGEMMA)
@@ -45,10 +49,6 @@ generated_ids = paligemma.generate(
 image_description = processor.batch_decode(generated_ids, skip_special_tokens=True)[0].strip().lower()
 
 print("Analysis Result:", image_description)
-
-# LLM model for classification
-LLAMA = "meta-llama/Llama-3.2-1B-Instruct"
-# Or for a smaller, faster option: llm_model_id = "facebook/opt-125m"
 
 # Load tokenizer and model for the LLM
 llama_tokenizer = AutoTokenizer.from_pretrained(LLAMA)
