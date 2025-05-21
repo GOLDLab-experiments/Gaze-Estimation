@@ -2,25 +2,16 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-# Distance calibration (adjust these values for your camera setup)
-KNOWN_DISTANCE = 1.0  # Reference distance in meters
-KNOWN_WIDTH = 180  # Approximate skeleton width in pixels at 1 meter
-FOCAL_LENGTH = 600  # Estimated focal length in pixels
-MIN_DISTANCE = 500 # Minimum distance in pixels for human obstacle detection
-
 # Initialize MediaPipe Pose
 mp_pose = mp.solutions.pose
 mp_drawing = mp.solutions.drawing_utils
 pose = mp_pose.Pose()
 
-def is_aggressive(path):
+def person_landmarks(image):
     """
     Detects aggressive behavior in a given image based on body posture.
     Returns (bool, image_with_skeleton).
     """
-
-    # Load the image
-    image = cv2.imread(path)
 
     # Convert image to RGB (required for MediaPipe)
     rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -29,28 +20,8 @@ def is_aggressive(path):
     results = pose.process(rgb_image)
     
     if not results.pose_landmarks:
-        return '0', '0' # No person detected, return original image
-
-    # Distance estimation based on skeleton width
-    frame_height, frame_width, _ = image.shape
-
-    keypoints = {i: results.pose_landmarks.landmark[i] for i in range(len(mp_pose.PoseLandmark))}
+        return None # No person detected, return original image
     
-    # Compute skeleton width
-    x_values = [kp.x * frame_width for kp in keypoints.values()]
-    person_width = max(x_values) - min(x_values)  # Width of the detected person in pixels
-
-    # Estimate distance
-    if person_width > 0:
-        estimated_distance = (KNOWN_WIDTH * FOCAL_LENGTH) / person_width
-        print (f'The estimated distance is: {estimated_distance}')
-    else:
-        estimated_distance = '0' 
-
-    # Return True if the person is too close
-    #return estimated_distance is not None and estimated_distance < 150
-
-
     # Create a copy of the image to draw on
     output_image = image.copy()
 
@@ -63,45 +34,18 @@ def is_aggressive(path):
         mp_drawing.DrawingSpec(color=(0, 0, 255), thickness=2, circle_radius=3)
     )
 
-    # Extract key landmarks
-    left_wrist = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_WRIST]
-    right_wrist = results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_WRIST]
-    left_shoulder = results.pose_landmarks.landmark[mp_pose.PoseLandmark.LEFT_SHOULDER]
-    right_shoulder = results.pose_landmarks.landmark[mp_pose.PoseLandmark.RIGHT_SHOULDER]
+    return results.pose_landmarks
 
-    # Convert normalized coordinates to Y positions (lower value means higher position in the image)
-    def get_y_position(landmark):
-        return landmark.y  
 
-    lw_y, rw_y, ls_y, rs_y = map(get_y_position, [left_wrist, right_wrist, left_shoulder, right_shoulder])
 
-    # Attack detection heuristic:
-    # - Hands are above shoulders (potential attack posture)
-    hands_above_shoulder = lw_y < ls_y or rw_y < rs_y
-
-    
-    cv2.imwrite("camera_image.jpg", output_image)
-
-    if estimated_distance is not '0' and estimated_distance < MIN_DISTANCE:
-        estimated_distance = '1'
-    else:
-        estimated_distance = '0'
-
-    if hands_above_shoulder:
-        return '1', estimated_distance 
-    else:
-        return '0', estimated_distance # Return aggression status and modified image
-
-def get_person_boundaries(image_path):
+def get_person_boundaries(image):
     """
     Uses skeleton detection to identify person boundaries.
     Returns (x, y, width, height) of the bounding box around the person.
     """
     try:
-        # Load the image
-        image = cv2.imread(image_path)
+        # Check if the image is valid
         if image is None:
-            person_coords = get_person_boundaries(image_path)
             return None
         
         # First try using MediaPipe Pose which is already in use in is_aggressive
