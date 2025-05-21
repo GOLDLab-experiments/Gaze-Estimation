@@ -2,6 +2,7 @@ import time
 import cv2
 import mediapipe as mp
 import numpy as np
+import skeleton
 
 # From detection client
 def setup_fullscreen_window():
@@ -12,27 +13,26 @@ def setup_fullscreen_window():
     cv2.setWindowProperty("Detection", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
 
-def blur_except_person_area(image_path, person_detected):
+def blur_except_person_area(image, person_detected):
     """
     Modifies the original image by blurring everything except the person and space above their head.
     Overwrites the original image and returns the same image path.
     """
     if not person_detected:
-        return image_path
+        return None
     
     # Load the original image
-    image = cv2.imread(image_path)
     if image is None:
-        print(f"Error: Could not read image {image_path}")
-        return image_path
+        print(f"Error: Could not read image ")
+        return None
     
     try:
         # Get person boundaries using skeleton detection
-        person_coords = get_person_boundaries(image_path)
+        person_coords = skeleton.get_person_boundaries(image)
         
         if person_coords is None:
             print("Warning: Could not detect person boundaries, using full image")
-            return image_path
+            return None
             
         # Unpack person coordinates
         x, y, w, h = person_coords
@@ -53,13 +53,11 @@ def blur_except_person_area(image_path, person_detected):
         # Draw a rectangle around the person area (optional)
         # cv2.rectangle(result, (x, y_start), (x+w, y_start+height), (0, 255, 0), 2)
         
-        # Save back to the original image path, overwriting it
-        cv2.imwrite(image_path, result)
         
-        return image_path
+        return image
     except Exception as e:
         print(f"Error in blur_except_person_area: {e}")
-        return image_path
+        return image
 
 
 def decorate_the_image(image, aggressive, helmet, person):
@@ -110,7 +108,6 @@ def is_aggressive(image):
     This function should be replaced with actual logic.
     """
     mp_pose = mp.solutions.pose
-    mp_drawing = mp.solutions.drawing_utils
     pose = mp_pose.Pose()
 
     # Convert image to RGB (required for MediaPipe)
