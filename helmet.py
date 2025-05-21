@@ -3,12 +3,7 @@ from ultralytics import YOLO
 import mediapipe as mp
 import numpy as np
 
-model_name = "yolo11s50.pt"
-
-def predict(model, image_path, model_name):
-    # Perform inference on a single image
-    results = model.predict(image_path, conf=0.5, save=True, show=False, project=f"{model_name}.py_helmet_detections", verbose=False)
-    return results
+model_name = "yolo_helmet.pt"
 
 def contains_helmet(results):
     detections = results[0].boxes.data.tolist()
