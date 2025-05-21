@@ -6,18 +6,11 @@ import cv2
 import numpy as np
 
 from socket import socket, AF_INET, SOCK_DGRAM
-from inference_helmet import run_inference_helmet
+from helmet import run_inference_helmet
 from skeleton import is_aggressive, get_person_boundaries
 
 gaze_ip = '127.0.0.1'
 gaze_port = 12346
-
-def setup_fullscreen_window():
-    """
-    Create a named window in fullscreen mode
-    """
-    cv2.namedWindow("Detection", cv2.WINDOW_NORMAL)
-    cv2.setWindowProperty("Detection", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
 
 def blur_except_person_area(image_path, person_detected):
     """
