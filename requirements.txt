@@ -5,3 +5,7 @@ Pillow
 accelerate
 huggingface_hub
 # ipywidgets
+opencv-python
+mediapipe
+numpy
+
