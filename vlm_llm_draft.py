@@ -143,7 +143,7 @@ print("started script")
 login(get_token())  # Log in to HuggingFace Hub using a private token
 
 PALIGEMMA = 'google/paligemma-3b-ft-textcaps-448'
-LLM_MODEL ='google/paligemma-3b-ft-textcaps-448'
+LLM_MODEL = 'meta-llama/Llama-3.2-1B-Instruct'
 # LLM_MODEL = "facebook/opt-125m"
 
 class VLM:
