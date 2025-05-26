@@ -34,7 +34,7 @@ class VLM:
             },
         ]
         # prompt = "<image> Describe the person in the image. Consider their facial expression, mood, any objects they are holding, how they are dressed, and the environment. If there are multiple people, refer to the closest one."
-    
+
         image = Image.open(image_path).convert("RGB")
         print("Image loaded.")
 
@@ -80,19 +80,49 @@ class LLM:
         self.model.to(device)
         self.device = device
         print(f"LLM ({model_id}) loaded and moved to {device}.")
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
+        # if self.tokenizer.pad_token is None:
+        #    self.tokenizer.pad_token = self.tokenizer.eos_token
 
     def classify(self, image_description, previous_output=None):
-        classification_prompt = (
-            "You are an AI model that classifies images based on their descriptions.\n"
-            "Based on the camera image description provided, classify the image into one of the following categories:\n"
-            "1. Benign, 2. Malicious, 3. Authorized\n"
-        )
+        messages = [
+            {
+                "role": "system",
+                "content": (
+                    "You are an AI model that classifies images based on their descriptions. "
+                    "Based on the camera image description provided, classify the image into one of the following categories: "
+                    "1. Benign, 2. Malicious, 3. Authorized."
+                )
+            },
+            {
+                "role": "user",
+                "content": f"Description: {image_description}"
+            }
+        ]
         if previous_output:
-            classification_prompt += f"\nPrevious classification: {previous_output}\n"
-        full_prompt = f"{classification_prompt}\nDescription: {image_description}\nClassification:"
-        inputs = self.tokenizer(full_prompt, return_tensors='pt')
+            messages.append({
+                "role": "user",
+                "content": f"Previous classification: {previous_output}"
+            })
+        messages.append({
+            "role": "user",
+            "content": "Based on the description above, output only one word: Benign, Malicious, or Authorized. Classification:"
+        })
+
+        print("Messages:", messages)
+
+        # If your tokenizer supports chat templates, use it; otherwise, flatten messages to a prompt
+        # if hasattr(self.tokenizer, "apply_chat_template"):
+        #     print("In if has attribute")
+        #     prompt = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True)
+        # else:
+        #     print("In else has attribute")
+        #     # Fallback: simple concatenation
+        prompt = "\n".join([msg["content"] for msg in messages])
+
+        print("Prompt:\n", prompt)
+        print(f"prompt type: {type(prompt)}")
+
+        inputs = self.tokenizer(prompt, return_tensors='pt')
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
         print("Inputs processed and moved to", self.device, "for LLM.")
         generated_ids = self.model.generate(
@@ -102,26 +132,20 @@ class LLM:
             do_sample=False,
             pad_token_id=self.tokenizer.pad_token_id
         )
-        output = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
-        print("LLM Output:", output)
+        generated_texts = self.tokenizer.batch_decode(
+            generated_ids,
+            skip_special_tokens=True,
+        )
+        output = generated_texts[0].strip()
+        
+        # output = self.tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0].strip()
+        print("LLM Output:\n", output)
         # Extract classification
         predicted_class = "uncertain"
-        classification_start_index = output.lower().find("classification:")
-        if classification_start_index != -1:
-            start_of_class_text = output[classification_start_index + len("classification:"):].strip()
-            if start_of_class_text:
-                predicted_class = start_of_class_text.split()[0].lower()
-        else:
-            response_lower = output.lower()
-            if "malicious" in response_lower:
-                predicted_class = "malicious"
-            elif "benign" in response_lower:
-                predicted_class = "benign"
-            elif "authorized" in response_lower:
-                predicted_class = "authorized"
-        if predicted_class not in ["malicious", "benign", "authorized", "uncertain"]:
-            predicted_class = "uncertain (unrecognized output)"
-        print(f"Classification Result: {predicted_class}")
+
+        predicted_class = output.partition("Classification:")[2].lstrip()
+        
+        print(f"Classification Result: {predicted_class[:-1]}")
         return predicted_class
 
 if __name__ == "__main__":
